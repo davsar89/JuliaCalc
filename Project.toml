@@ -1,0 +1,20 @@
+name = "JuliaCalc"
+uuid = "c0d8fe56-3db0-4c8b-99c6-351c44bf41d9"
+authors = ["David <17025345+davsar89@users.noreply.github.com>"]
+version = "0.1.1"
+
+[deps]
+Gtk4 = "9db2cae5-386f-4011-9d63-a5602296539b"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
+
+[compat]
+Gtk4 = "0.7.14"
+Printf = "1.11.0"
+Unitful = "1.29.0"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

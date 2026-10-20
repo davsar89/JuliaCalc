@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=JuliaCalc
+GenericName=Calculator
+Comment=Calculator and unit converter with explicit angle units
+Exec=juliacalc
+Icon=juliacalc
+Terminal=false
+Categories=Utility;Calculator;Science;Math;
+Keywords=calculator;units;converter;trigonometry;geometry;
+StartupWMClass=juliacalc
