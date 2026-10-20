@@ -2,7 +2,8 @@
 
 Calculator and unit converter (GTK 4 desktop app) built on
 [Unitful.jl](https://github.com/PainterQubits/Unitful.jl), with explicit angle units,
-geometry helpers and a triangle solver. Ships as a self-contained `.deb` for Ubuntu 20.04+.
+geometry helpers and a triangle solver. Ships as a self-contained `.deb` for Ubuntu 20.04+ and
+a Windows installer.
 
 <p align="center">
   <picture>
@@ -116,6 +117,54 @@ writes the image. The second is needed because PackageCompiler silently drops re
 parse back). Without it, the window took ~7 s to appear, almost all of it compiling. To check
 after changes, run with `--trace-compile=stderr` and see what still compiles at launch.
 
+## Build and install on Windows
+
+Needs Julia 1.11, the version the manifests are resolved with (`juliaup add 1.11`, or unzip
+`julia-1.11.5-win64.zip` from julialang.org), and [Inno Setup 6](https://jrsoftware.org/isinfo.php)
+(`winget install JRSoftware.InnoSetup`). In PowerShell, from the repository root:
+
+```powershell
+julia --project=packaging -e 'using Pkg; Pkg.instantiate()'   # first time only
+julia --project=packaging packaging/build_windows.jl           # writes dist\JuliaCalc-<version>-setup.exe
+```
+
+The same two workloads as for the `.deb` compile the app; a JuliaCalc window opens for a few
+seconds during the build (no Xvfb needed). `--package-only` reuses `build\app` when only
+`packaging/juliacalc.iss` or the icons changed. `ISCC.exe` is found on PATH or in the default
+Inno Setup folders; set the `ISCC` environment variable to use another one. The build also
+copies Julia's `lld.exe` and `dsymutil.exe` into the app's `libexec\julia`: without them, Julia's
+startup searches PATH for them and dies on an entry it cannot stat (it did on a user-made
+junction when Inno Setup started the app).
+
+The installer is per-user: no admin rights, the app goes to `%LOCALAPPDATA%\Programs\JuliaCalc`
+with a Start-menu entry (desktop shortcut optional), and Settings → Apps uninstalls it. Program
+Files is avoided on purpose, because GTK writes a cache into the app's depot (`share\julia`) on
+first start, the problem `~/.cache/juliacalc` solves on Linux. Setup builds that cache itself by
+running `juliacalc.exe 1+1` hidden, because on the app's first start the cache tool, a console
+program, would flash a terminal window. The window then opens in about 1.5 s (on Windows,
+`gui()` also turns off D-Bus, whose failing autolaunch cost 2 s per start). A newer installer replaces the
+installed version (the version again comes from `Project.toml`). The installer is not
+code-signed, so SmartScreen warns the first time (More info → Run anyway).
+
+`bin\juliacalc.exe` is PackageCompiler's launcher, a console program: in a terminal,
+`juliacalc.exe "100 km/h to mph"` evaluates without a window and `juliacalc.exe --debug` opens
+the window with the debug log. The Start-menu entry runs `bin\juliacalcw.exe`, the same file with
+the PE header's subsystem set to GUI, so no console window opens next to the app. PATH is not
+changed. The theme choice is saved in `%USERPROFILE%\.config\juliacalc\theme`; without one the
+app starts light (the desktop preference is read through `gsettings`, which Windows lacks).
+
+Icons: `juliacalc.ico` (both launchers, which `build_windows.jl` gives it as their exe icon
+through the Win32 resource API, plus the shortcuts and the Apps list) is made from the 256 px PNG with
+`magick packaging/icons/juliacalc-256.png -define icon:auto-resize=256,64,48,32,24,16 packaging/icons/juliacalc.ico`.
+`setup.exe` has its own icon, `juliacalc-setup.ico`: the app icon with an orange install-arrow
+badge, generated with Codex `image_gen` from `juliacalc-1024.png` on a flat magenta background
+(the image model cannot make transparent ones). The background was keyed out into
+`juliacalc-setup-1024.png` with `magick in.png -alpha set -fuzz 35% -fill none -draw "color 0,0 floodfill"
+-channel A -morphology Erode Disk:1.5 -blur 0x0.7 +channel juliacalc-setup-1024.png`, and the `.ico`
+made from it with the same `auto-resize` command. The window and taskbar icon is the
+`juliacalc` PNG the installer puts in `share\icons`, which `gui()` adds to GTK's icon search
+path on Windows.
+
 ## Layout
 
 | File | Contents |
@@ -125,4 +174,5 @@ after changes, run with `--trace-compile=stderr` and see what still compiles at 
 | `src/engine.jl` | sessions and evaluation of one input line |
 | `src/format.jl` | how results are shown |
 | `src/gui.jl` | the GTK window |
-| `packaging/` | the `.deb` build (PackageCompiler), launcher, desktop entry; `icons/` holds the app icon (generated with Codex `image_gen`, 1024 px source plus 256/512 px exports) |
+| `packaging/` | the `.deb` build (PackageCompiler), launcher, desktop entry; `icons/` holds the app icon (generated with Codex `image_gen`, 1024 px source plus 256/512 px exports and the Windows `.ico`; `juliacalc-setup-*` is the installer's icon) |
+| `packaging/build_windows.jl`, `packaging/juliacalc.iss` | the Windows installer build (PackageCompiler, then Inno Setup) |

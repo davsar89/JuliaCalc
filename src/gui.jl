@@ -1,8 +1,9 @@
 # The window. All maths goes through `evaluate`, `format_value` and `parse_unit`; this file
 # only lays out widgets, styles them and moves text around.
 
-const SANS = "\"Inter\", \"Cantarell\", \"Ubuntu\", \"Noto Sans\", sans-serif"
-const MONO = "\"JetBrains Mono\", \"Fira Mono\", \"Noto Sans Mono\", \"DejaVu Sans Mono\", monospace"
+# Segoe UI, Cascadia Mono and Consolas come with Windows, whose generic monospace is Courier New.
+const SANS = "\"Inter\", \"Cantarell\", \"Ubuntu\", \"Noto Sans\", \"Segoe UI\", sans-serif"
+const MONO = "\"JetBrains Mono\", \"Fira Mono\", \"Noto Sans Mono\", \"DejaVu Sans Mono\", \"Cascadia Mono\", \"Consolas\", monospace"
 
 # Colour tokens per theme. The stylesheet refers only to these names.
 const THEMES = Dict(
@@ -561,6 +562,14 @@ end
 so nothing touches GTK after the window is gone and the process exits cleanly."
 function gui()
     Gtk4.GLib.G_.set_prgname("juliacalc")          # Gtk4 sets "julia"; the desktop entry matches this
+    if Sys.iswindows()
+        # The installer puts the icon in the app's share\icons (the .deb uses /usr/share/icons).
+        Gtk4.icon_theme_add_search_path(Gtk4.GtkIconTheme(Gtk4.GdkDisplay()),
+                                        joinpath(Sys.BINDIR, "..", "share", "icons"))
+        # GApplication would try to start a D-Bus session bus (gdbus.exe), which fails after ~2 s
+        # on every start; the app needs no bus.
+        get!(ENV, "DBUS_SESSION_BUS_ADDRESS", "disabled:")
+    end
     Gtk4.G_.set_default_icon_name("juliacalc")
     app = GtkApplication("org.juliacalc.JuliaCalc", Gtk4.GLib.ApplicationFlags_NON_UNIQUE)
     signal_connect(app, :activate) do app
