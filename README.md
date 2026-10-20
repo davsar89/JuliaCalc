@@ -4,6 +4,14 @@ Calculator and unit converter (GTK 4 desktop app) built on
 [Unitful.jl](https://github.com/PainterQubits/Unitful.jl), with explicit angle units,
 geometry helpers and a triangle solver. Ships as a self-contained `.deb` for Ubuntu 20.04+.
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshot-dark.png">
+    <img src="docs/screenshot-light.png" width="640"
+         alt="JuliaCalc calculator: sin(30) with a hint to use sind(30), atand(1) shown in degrees and radians, unit conversions, and the radian and degree function buttons">
+  </picture>
+</p>
+
 ## Run from source (debug mode)
 
 ```sh
